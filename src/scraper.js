@@ -18,7 +18,7 @@ async function scrape(url) {
     const browser = await puppeteer.launch({ args: ['--disable-dev-shm-usage', '--no-sandbox'] });
 
     const page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(1000 * 2 * 60);
+    page.setDefaultNavigationTimeout(1000 * 2 * 60);
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(url, { waitUntil: 'networkidle2' });
 
