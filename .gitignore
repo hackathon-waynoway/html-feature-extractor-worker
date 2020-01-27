@@ -9,3 +9,6 @@ node-debug.log
 
 # terraform env file
 terraform.tfvars
+
+# VS Code
+.vscode
