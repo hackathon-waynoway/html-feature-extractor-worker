@@ -1,0 +1,27 @@
+{
+  "name": "html-feature-extractor-worker",
+  "version": "1.0.0",
+  "description": "Extract html pages with styling and positional information for each html element",
+  "main": "src/local.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/local.js",
+    "start:worker": "node src/worker.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bmccarthy/html-feature-extractor-worker"
+  },
+  "author": "Brian McCarthy <brian.mcc@rthy.org>",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.610.0",
+    "commander": "^4.1.0",
+    "filenamify-url": "^2.1.1",
+    "gm": "^1.23.1",
+    "puppeteer": "^2.0.0",
+    "puppeteer-full-page-screenshot": "^1.0.5",
+    "shortid": "^2.2.15",
+    "sqs-consumer": "^5.4.0"
+  }
+}

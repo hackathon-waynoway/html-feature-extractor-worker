@@ -1,0 +1,7 @@
+output
+node_modules
+node-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
