@@ -23,10 +23,13 @@ if (!process.env.SQS_QUEUE_URL) return console.error(`Need to set the environmen
 if (!process.env.S3_BUCKET_NAME) return console.error(`Need to set the environment variable S3_BUCKET_NAME`);
 if (!process.env.AWS_REGION) return console.error(`Need to set the environment variable AWS_REGION`);
 
+console.info(`Starting queue worker`);
+
 const app = Consumer.create({
     region: process.env.AWS_REGION,
     queueUrl: process.env.SQS_QUEUE_URL,
     handleMessage: async (message) => {
+        console.info(`Got message`, message);
         const { url, source } = JSON.parse(message.Body);
         const result = await scraper.scrape(url);
 

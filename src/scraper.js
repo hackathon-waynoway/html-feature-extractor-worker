@@ -97,11 +97,6 @@ async function scrape(url) {
 
         iterateAllNodes(callback);
 
-        const nodeList = document.querySelectorAll('[itemtype="http://schema.org/Event"]');
-        const elements = [];
-
-        nodeList.forEach(node => elements.push({ outerHtml: node.outerHTML }));
-
         return {
             elements: processedElements,
         };

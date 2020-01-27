@@ -25,4 +25,4 @@ COPY --chown=node:node src .
 # Only used for running local.js which does not interact with AWS
 RUN mkdir -p /home/node/app/output
 
-CMD [ "node", "local.js", "-v" ]
+CMD [ "node", "worker.js", "-v" ]
