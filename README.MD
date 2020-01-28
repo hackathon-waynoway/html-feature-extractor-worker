@@ -62,6 +62,7 @@ node src/worker.js
 export AWS_PROFILE="bmccarthy" && \
 node src/populate-queue.js
 ```
+
 ## Terraform Deployment
 Must have terraform/terrform.tfvars file with the following contents:
 ```
@@ -74,6 +75,14 @@ Build and upload image to ECR
 eval $(aws ecr get-login --no-include-email --region us-east-1 --profile bmccarthy)
 docker tag bmccarthy/html-feature-extractor-worker 109628666462.dkr.ecr.us-east-1.amazonaws.com/html-feature-extractor-worker:latest
 docker push 109628666462.dkr.ecr.us-east-1.amazonaws.com/html-feature-extractor-worker:latest
+```
+
+## Download All JSON Files
+```shell
+aws s3 cp s3://html-feature-extractor-worker-output/[source_parameter]/ . --recursive --exclude "*" --include "*.json" --profile [aws_profile]
+
+## Example:
+aws s3 cp s3://html-feature-extractor-worker-output/C2Z5BEoK/ . --recursive --exclude "*" --include "*.json" --profile bmccarthy
 ```
 
 ## TODO
