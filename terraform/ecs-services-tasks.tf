@@ -3,8 +3,13 @@ resource "aws_ecs_cluster" "cluster" {
 }
 
 resource "aws_ecs_task_definition" "task_definition" {
-  family        = "${var.application}"
-  task_role_arn = "${aws_iam_role.task_role.arn}"
+  family                   = "${var.application}"
+  task_role_arn            = "${aws_iam_role.task_role.arn}"
+  execution_role_arn       = "${aws_iam_role.task_execution_role.arn}"
+  cpu                      = "512"
+  memory                   = "2048"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
 
   container_definitions = <<DEFINITION
 [
@@ -43,11 +48,19 @@ resource "aws_ecs_task_definition" "task_definition" {
     "command": null,
     "user": null,
     "dockerLabels": null,
-    "logConfiguration": null,
+    "logConfiguration": {
+        "logDriver": "awslogs",
+        "secretOptions": null,
+        "options": {
+            "awslogs-group": "${aws_cloudwatch_log_group.log_group.name}",
+            "awslogs-region": "${var.region}",
+            "awslogs-stream-prefix": "ecs"
+        }
+    },
     "cpu": 0,
     "privileged": null,
-    "memoryReservation": 750,
-    "memory": 2000,
+    "memoryReservation": null,
+    "memory": null,
     "healthCheck": null
   }
 ]
@@ -55,9 +68,16 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "service" {
-  name                               = "${var.application}"
-  cluster                            = "${aws_ecs_cluster.cluster.arn}"
-  desired_count                      = "1"
+  name          = "${var.application}"
+  cluster       = "${aws_ecs_cluster.cluster.arn}"
+  desired_count = "0"
+  launch_type   = "FARGATE"
 
-  task_definition = "${element(aws_ecs_task_definition.task_definition.*.arn, count.index)}"
+  network_configuration {
+    subnets          = ["subnet-37c64c52"]
+    assign_public_ip = true
+    
+  }
+
+  task_definition = "${aws_ecs_task_definition.task_definition.arn}"
 }
