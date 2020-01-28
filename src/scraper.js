@@ -1,13 +1,7 @@
 const puppeteer = require('puppeteer');
-const fullPageScreenshot = require('puppeteer-full-page-screenshot');
+// const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
-/**
- * Wait a specified number of milliseconds
- * @param {number} milliseconds 
- */
-const sleep = (milliseconds) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+// puppeteer.use(StealthPlugin())
 
 /**
  * Scrape a url to return back all html elements with positional and style features
@@ -21,8 +15,7 @@ async function scrape(url) {
     page.setDefaultNavigationTimeout(1000 * 2 * 60);
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(url, { waitUntil: 'networkidle2' });
-
-    await sleep(2000);
+    await page.waitFor(3000);
 
     const screenshot = await page.screenshot({ fullPage: true, type: 'png', encoding: 'binary' });
 
