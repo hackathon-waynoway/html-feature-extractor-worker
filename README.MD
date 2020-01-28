@@ -62,7 +62,7 @@ node src/worker.js
 export AWS_PROFILE="bmccarthy" && \
 node src/populate-queue.js
 ```
-## Deployment
+## Terraform Deployment
 Must have terraform/terrform.tfvars file with the following contents:
 ```
 profile = "aws_profile_name"
@@ -77,9 +77,7 @@ docker push 109628666462.dkr.ecr.us-east-1.amazonaws.com/html-feature-extractor-
 ```
 
 ## TODO
-* Use FarGate instead of ECS. No Need to provision server?
 * Dockerfile should use pupeteer without "no-sandbox"
-* find out how to do AssumeRole 
 * take image generated and add bounding boxes - http://aheckmann.github.io/gm/docs.html#drawing-primitives
 * Don't save elements which are invisible (height/width = 0)
 * find out how to represent the itemtype=Event, itemprop=name, itemprop=location, and itemprop=startDate attributes on the output from the scraper https://github.com/tomav/node-microdata-scraper/blob/master/index.js
