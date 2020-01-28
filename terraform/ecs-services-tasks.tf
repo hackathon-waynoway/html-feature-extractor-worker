@@ -80,4 +80,8 @@ resource "aws_ecs_service" "service" {
   }
 
   task_definition = "${aws_ecs_task_definition.task_definition.arn}"
+
+  lifecycle {
+    ignore_changes = ["desired_count"]
+  }
 }

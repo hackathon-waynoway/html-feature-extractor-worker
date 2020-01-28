@@ -55,9 +55,13 @@ export AWS_PROFILE="bmccarthy" && \
 export SQS_QUEUE_URL="https://sqs.us-east-1.amazonaws.com/109628666462/html-feature-extractor-worker-queue" && \
 export S3_BUCKET_NAME="html-feature-extractor-worker-output" && \
 node src/worker.js
-
 ```
 
+## Ren Queue Populator
+```shell
+export AWS_PROFILE="bmccarthy" && \
+node src/populate-queue.js
+```
 ## Deployment
 Must have terraform/terrform.tfvars file with the following contents:
 ```

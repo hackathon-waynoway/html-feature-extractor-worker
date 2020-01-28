@@ -29,7 +29,6 @@ const app = Consumer.create({
     region: process.env.AWS_REGION,
     queueUrl: process.env.SQS_QUEUE_URL,
     handleMessage: async (message) => {
-        console.info(`Got message`, message);
         const { url, source } = JSON.parse(message.Body);
         const result = await scraper.scrape(url);
 
@@ -42,6 +41,8 @@ const app = Consumer.create({
         const p2 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.json`, Body: JSON.stringify(result.data) }).promise();
 
         await Promise.all([p1, p2]);
+
+        console.info(`finished processing: ${source}=${url}`);
     }
 });
 
