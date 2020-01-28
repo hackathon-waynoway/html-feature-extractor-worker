@@ -18,45 +18,41 @@ console.log(options);
 const sqs = new AWS.SQS();
 
 async function main() {
-    const queueUrl = `https://sqs.us-east-1.amazonaws.com/109628666462/html-feature-extractor-worker-queue`
+    return new Promise((resolve, reject) => {
+        const queueUrl = `https://sqs.us-east-1.amazonaws.com/109628666462/html-feature-extractor-worker-queue`
 
-    const readInterface = readline.createInterface({
-        input: fs.createReadStream(options.input),
-        output: process.stdout,
-        console: false
-    });
+        const readInterface = readline.createInterface({
+            input: fs.createReadStream(options.input)
+        });
 
-    let count = 0;
+        let count = 0;
+        const maxCount = +options.count;
 
-    readInterface.on('line', async (line) => {
-        try {
-            if (count < options.count) {
-                if (!line) {
-                    console.warn(`line is empty: '${line}'.`);
-                    return;
-                }
+        readInterface.on('line', async (line) => {
+            try {
+                if (count >= maxCount) { readInterface.close(); return; }
 
                 const url = line.trim();
                 const message = { url: url, source: options.prefix };
+                console.log('sending message ' + url);
+                count++;
                 await sqs.sendMessage({ QueueUrl: queueUrl, MessageBody: JSON.stringify(message) }).promise();
 
-                count++;
+            } catch (e) {
+                console.error(`Error trying to send line: '${line}'`, e);
             }
+        });
 
-            if (count >= options.count) {
-                console.info(`Finished sending ${count} messages to ${queueUrl}. Ending now..`);
-                readInterface.removeAllListeners();
-                readInterface.close();
-                process.exit(0);
-            }
-        } catch (e) {
-            console.error(`Error trying to send line: '${line}'`, e);
-        }
+        readInterface.on('close', function () {
+            resolve({count});
+        });
+
+
     });
 }
 
 main()
-    .then(() => console.log('DONE!'))
+    .then((processed) => console.log('DONE!', processed))
     .catch((e) => {
         console.error('ERROR', e);
         process.exit(1);
