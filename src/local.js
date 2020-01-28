@@ -5,13 +5,11 @@ const filenamifyUrl = require('filenamify-url');
 
 const scraper = require('./scraper');
 
-program
+const options = program
     .option('-v, --verbose', 'verbose', false)
     .option('-o, --out <value>', 'output folder', 'output')
     .option('-s, --src <value>', 'url to crawl', 'https://losangeles.eventful.com/events/categories/music')
-    .parse(process.argv);
-
-const options = program.opts();
+    .parse(process.argv).opts();
 
 if (options.verbose) console.log(options);
 
