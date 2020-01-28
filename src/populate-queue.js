@@ -1,3 +1,5 @@
+const fs = require('fs');
+const readline = require('readline');
 
 const AWS = require('aws-sdk');
 const program = require('commander');
@@ -11,20 +13,43 @@ const options = program
 const sqs = new AWS.SQS();
 
 async function main() {
-
-    // TODO: read as input the schema_Event.gz file, get all unique urls which contain Event.
-    // TODO: don't want to spam sites, so maybe only take unique domains?
-    // TODO: Might want to filter only webpages which are in the USA 
-    // TODO: limit this list to ~100 to start and send those SQS messages
-
     const date = new Date();
     const source = `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}`;
-
     const queueUrl = `https://sqs.us-east-1.amazonaws.com/109628666462/html-feature-extractor-worker-queue`
-    const message = { url: 'https://losangeles.eventful.com/events/categories/music', source: source };
-    const result = await sqs.sendMessage({ QueueUrl: queueUrl, MessageBody: JSON.stringify(message) }).promise();
 
-    console.log(result);
+    const readInterface = readline.createInterface({
+        input: fs.createReadStream(options.src),
+        output: process.stdout,
+        console: false
+    });
+
+    let count = 0;
+
+    readInterface.on('line', function (line) {
+        try {
+            if (count < options.count) {
+                if (!line) {
+                    console.warn(`line is empty: '${line}'.`);
+                    return;
+                }
+
+                const url = line.trim();
+                const message = { url: url, source: source };
+                await sqs.sendMessage({ QueueUrl: queueUrl, MessageBody: JSON.stringify(message) }).promise();
+
+                count++;
+            }
+
+            if (count >= options.count) {
+                console.info(`Finished sending ${count} messages to ${queueUrl}. Ending now..`);
+                readInterface.removeAllListeners();
+                readInterface.close();
+                process.exit(0);
+            }
+        } catch (e) {
+            console.error(`Error trying to send line: '${line}'`, e);
+        }
+    });
 }
 
 main()
