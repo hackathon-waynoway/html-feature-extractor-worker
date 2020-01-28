@@ -60,7 +60,7 @@ node src/worker.js
 ## Ren Queue Populator
 ```shell
 export AWS_PROFILE="bmccarthy" && \
-node src/populate-queue.js
+node src/populate-queue.js -i output/unique_url.txt -c 2
 ```
 
 ## Terraform Deployment

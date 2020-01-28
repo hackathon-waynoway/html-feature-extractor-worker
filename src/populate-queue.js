@@ -4,28 +4,31 @@ const readline = require('readline');
 const AWS = require('aws-sdk');
 const program = require('commander');
 
+const date = new Date();
+
 const options = program
     .option('-v, --verbose', 'verbose', false)
-    .option('-s, --src <value>', 'File with urls to crawl (one per line)')
+    .requiredOption('-i, --input <value>', 'File with urls to crawl (one per line)')
     .option('-c, --count <value>', 'number of urls to crawl', 100)
+    .option('-p, --prefix <value>', 's3 prefix', `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}`)
     .parse(process.argv).opts();
+
+console.log(options);
 
 const sqs = new AWS.SQS();
 
 async function main() {
-    const date = new Date();
-    const source = `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}`;
     const queueUrl = `https://sqs.us-east-1.amazonaws.com/109628666462/html-feature-extractor-worker-queue`
 
     const readInterface = readline.createInterface({
-        input: fs.createReadStream(options.src),
+        input: fs.createReadStream(options.input),
         output: process.stdout,
         console: false
     });
 
     let count = 0;
 
-    readInterface.on('line', function (line) {
+    readInterface.on('line', async (line) => {
         try {
             if (count < options.count) {
                 if (!line) {
@@ -34,7 +37,7 @@ async function main() {
                 }
 
                 const url = line.trim();
-                const message = { url: url, source: source };
+                const message = { url: url, source: options.prefix };
                 await sqs.sendMessage({ QueueUrl: queueUrl, MessageBody: JSON.stringify(message) }).promise();
 
                 count++;
