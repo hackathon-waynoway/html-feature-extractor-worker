@@ -90,6 +90,7 @@ aws s3 cp s3://html-feature-extractor-worker-output/C2Z5BEoK/ . --recursive --ex
 * take image generated and add bounding boxes - http://aheckmann.github.io/gm/docs.html#drawing-primitives
 * Don't save elements which are invisible (height/width = 0)
 * find out how to represent the itemtype=Event, itemprop=name, itemprop=location, and itemprop=startDate attributes on the output from the scraper https://github.com/tomav/node-microdata-scraper/blob/master/index.js
+* create requirements.txt file for python dependencies: scikitlearn, numpy, pandas, matplotlib
 
 ## Models
 * Input html element, output whether it is event or not an event
