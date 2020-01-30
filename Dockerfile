@@ -35,4 +35,4 @@ RUN npm ci
 COPY --chown=pptruser:pptruser src .
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD [ "node", "local.js", "-v"]
+CMD [ "node", "worker.js"]
