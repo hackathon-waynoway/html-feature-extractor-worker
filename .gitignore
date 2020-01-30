@@ -10,4 +10,4 @@ node-debug.log
 .vscode
 
 # Environment file
-.env
+*.env
