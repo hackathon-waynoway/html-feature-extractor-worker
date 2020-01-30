@@ -13,3 +13,6 @@ terraform.tfvars
 
 # VS Code
 .vscode
+
+# Environment file
+.env

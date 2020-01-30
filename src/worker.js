@@ -23,26 +23,33 @@ if (!process.env.SQS_QUEUE_URL) return console.error(`Need to set the environmen
 if (!process.env.S3_BUCKET_NAME) return console.error(`Need to set the environment variable S3_BUCKET_NAME`);
 if (!process.env.AWS_REGION) return console.error(`Need to set the environment variable AWS_REGION`);
 
-console.info(`Starting queue worker`);
+console.info(`Starting queue worker on queue: ${process.env.SQS_QUEUE_URL} in region ${process.env.AWS_REGION}. Uploading to S3: ${process.env.S3_BUCKET_NAME}`);
 
 const app = Consumer.create({
     region: process.env.AWS_REGION,
     queueUrl: process.env.SQS_QUEUE_URL,
     handleMessage: async (message) => {
-        const { url, source } = JSON.parse(message.Body);
-        const result = await scraper.scrape(url);
+        try {
+            const { url, source } = JSON.parse(message.Body);
+            if (!url) return console.warn(`No 'url' on message: ${message.Body}`);
+            if (!source) return console.warn(`No 'source' on message: ${message.Body}`);
 
-        const filenameUrl = filenamifyUrl(result.data.url);
-        const suffix = shortid.generate();
+            const result = await scraper.scrape(url);
 
-        const key = `${source}/${filenameUrl}_${suffix}`;
+            const filenameUrl = filenamifyUrl(result.data.url);
+            const suffix = shortid.generate();
 
-        const p1 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.png`, Body: result.screenshot }).promise();
-        const p2 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.json`, Body: JSON.stringify(result.data) }).promise();
+            const key = `${source}/${filenameUrl}_${suffix}`;
 
-        await Promise.all([p1, p2]);
+            const p1 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.png`, Body: result.screenshot }).promise();
+            const p2 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.json`, Body: JSON.stringify(result.data) }).promise();
 
-        console.info(`finished processing: ${source}=${url}`);
+            await Promise.all([p1, p2]);
+
+            console.info(`finished processing: ${source}=${url}`);
+        } catch (e) {
+            console.error('caught error processing message', e);
+        }
     }
 });
 

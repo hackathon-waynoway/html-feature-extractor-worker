@@ -9,8 +9,9 @@ const date = new Date();
 const options = program
     .option('-v, --verbose', 'verbose', false)
     .requiredOption('-i, --input <value>', 'File with urls to crawl (one per line)')
-    .option('-c, --count <value>', 'number of urls to crawl', 100)
-    .option('-p, --prefix <value>', 's3 prefix', `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}`)
+    .requiredOption('-q, --queue <value>', 'SQS Queue URL to send messages to')
+    .option('-c, --count <value>', 'Number of urls to crawl', 100)
+    .option('-p, --prefix <value>', 'S3 prefix', `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}`)
     .parse(process.argv).opts();
 
 console.log(options);
@@ -18,22 +19,22 @@ console.log(options);
 const sqs = new AWS.SQS();
 
 async function main() {
-    return new Promise((resolve, reject) => {
-        const queueUrl = `https://sqs.us-east-1.amazonaws.com/109628666462/html-feature-extractor-worker-queue`
-
+    return new Promise((resolve) => {
         const readInterface = readline.createInterface({
             input: fs.createReadStream(options.input)
         });
 
         let count = 0;
         const maxCount = +options.count;
+        const queueUrl = options.queue;
+        const s3Prefix = options.prefix;
 
         readInterface.on('line', async (line) => {
             try {
                 if (count >= maxCount) { readInterface.close(); return; }
 
                 const url = line.trim();
-                const message = { url: url, source: options.prefix };
+                const message = { url: url, source: s3Prefix };
                 console.log('sending message ' + url);
                 count++;
                 await sqs.sendMessage({ QueueUrl: queueUrl, MessageBody: JSON.stringify(message) }).promise();
@@ -46,8 +47,6 @@ async function main() {
         readInterface.on('close', function () {
             resolve({count});
         });
-
-
     });
 }
 

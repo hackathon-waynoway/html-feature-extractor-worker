@@ -7,95 +7,79 @@ http://webdatacommons.org/structureddata/2019-12/stats/schema_org_subsets.html
 The following properties from events will be classified: name, startDate, location.
 
 ## Setup
-1. Take the data retrieved from web data commons and place it into the "data" folder in this repository. [schema_Event.gz](http://schema.org/Event.
+1. Take the data retrieved from web data commons and place it into the "data" directory in this repository. [schema_Event.gz](http://schema.org/Event.
 http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspecific/md/schema_Event.gz)
 
-## Steps of Project
-1. Filter all items from file to unique urls which contain at least an event with name, startDate, location.
-    a. This will help trim down the number of sites we go to.  We don't actually use the information (name, startDate, location) from this file since it may be stale already and not exist on the website.  Instead we are looking for websites who tend to markup their events with these properties.
-2. Pass these urls to the checker.js script to further filter this list down to those where we can creating training data from:
-    a. Use pupeteer to go to the website and use some parser to make sure it has some Event schema data (might be able to just use css selectors to check for itemscope, itemprop attributes)
-    b. Attempt to map the name, location, startDate to the actual (visible) html element.  Sometimes pages will have non-visible elements which have the itemscope/itemprop on them instead of having them directly on the visible html elements
-    c. Output from this script should be features for this webpage:
-        1. Each visible html element:
-            * height, width, top_left_x, top_left_y, bottom_right_x, bottom_right_y, screenshot, text of element, html_tag, html_class_names, html_id, font_size, number_of_font_sizes, avg_font_size, max_font_size, min_font_size, foreground_color, number_of_different_colors?, how_deep_elements_nested, how_deep_this_element_is, font_weight
-        2. url, render_date_time, status (parsed, not_easily_parsed, no_events)
-        3. output thes items as one file per page
+2. Create your .env file if you want to run the worker in a docker container locally (instead of in AWS)
+    ```text
+    AWS_ACCESS_KEY_ID=[AWS_ACCESS_KEY_ID]
+    AWS_SECRET_ACCESS_KEY=[AWS_SECRET_ACCESS_KEY]
+    AWS_REGION=[AWS_REGION]
+    SQS_QUEUE_URL=[SQS_QUEUE_URL]
+    S3_BUCKET_NAME=[S3_BUCKET_NAME]
+    ```
 
-## Worker
-SQS Message
+3. Create a file in the terraform directory called "terraform.tfvars" with the following contents if you want to run the worker in a docker container in AWS Fargate.
+    ```
+    profile = "[aws_profile]"
+    region  = "aws_region"
+    ```
+
+## Unique URLs
+The data/schema_Event.gz file contains many duplicate urls. We only want to scrape unique urls so we can run the below command to get a new text file with unique urls.
+```shell
+python3 unique_urls.py
+```
+
+## Run html-feature-extractor-worker Locally
+```shell
+docker build -t bmccarthy/html-feature-extractor-worker .
+
+docker run \
+    --env-file .env \
+    --cap-add=SYS_ADMIN \
+    bmccarthy/html-feature-extractor-worker
+```
+
+## Run html-feature-extractor-worker in AWS Fargate
+```shell
+docker build -t bmccarthy/html-feature-extractor-worker .
+
+eval $(aws ecr get-login --no-include-email --region [aws_region] --profile [aws_profile])
+docker tag bmccarthy/html-feature-extractor-worker [aws_account_id].dkr.ecr.[aws_region].amazonaws.com/html-feature-extractor-worker:latest
+docker push aws_account_id.dkr.ecr.[aws_region].amazonaws.com/html-feature-extractor-worker:latest
+```
+
+## Run Queue Populator
+This command will send messages to the queue the html-feature-extractor-worker is listening to. Each message will look like:
 ```json
 {
     "url": "url_to_parse",
     "source": "source/version_of_experiment"
 }
 ```
-
-## Run Local
 ```shell
-docker build -t bmccarthy/html-feature-extractor-worker .
-
-iam-docker-run \
-     --image bmccarthy/html-feature-extractor-worker \
-     --aws-role-name html-feature-extractor-worker-container-task-role \
-     --host-source-path ./src \
-     --container-source-path /app/src \
-     --interactive \
-     --profile personal \
-     --full-entrypoint "node /app/src/local.js"
-
-docker run -rm -it --entrypoint /bin/bash bmccarthy/html-feature-extractor-worker
-
-docker run -rm -it -v output:/home/node/app/output --entrypoint "node /home/node/app/local.js" bmccarthy/html-feature-extractor-worker
-```
-
-## Run Worker
-```shell
-export AWS_PROFILE="bmccarthy" && \
-export SQS_QUEUE_URL="https://sqs.us-east-1.amazonaws.com/109628666462/html-feature-extractor-worker-queue" && \
-export S3_BUCKET_NAME="html-feature-extractor-worker-output" && \
-node src/worker.js
-```
-
-## Ren Queue Populator
-```shell
-export AWS_PROFILE="bmccarthy" && \
-node src/populate-queue.js -i output/unique_url.txt -c 2
-```
-
-## Terraform Deployment
-Must have terraform/terrform.tfvars file with the following contents:
-```
-profile = "aws_profile_name"
-region  = "aws_region"
-```
-
-Build and upload image to ECR
-```shell
-eval $(aws ecr get-login --no-include-email --region us-east-1 --profile bmccarthy)
-docker tag bmccarthy/html-feature-extractor-worker 109628666462.dkr.ecr.us-east-1.amazonaws.com/html-feature-extractor-worker:latest
-docker push 109628666462.dkr.ecr.us-east-1.amazonaws.com/html-feature-extractor-worker:latest
+export AWS_PROFILE="[aws_profile]" && \
+node src/populate-queue.js \
+    -q https://sqs.[aws_region].amazonaws.com/aws_account_id]/html-feature-extractor-worker-queue \
+    -i data/unique_urls.txt \
+    -c 2
 ```
 
 ## Download All JSON Files
+After the worker has finished processing, it will place all scraped websites in S3 as individual json files and corresponding screenshots.  These can be downloaded with the aws cli using the below command.
 ```shell
 aws s3 cp s3://html-feature-extractor-worker-output/[source_parameter]/ . --recursive --exclude "*" --include "*.json" --profile [aws_profile]
-
-## Example:
-aws s3 cp s3://html-feature-extractor-worker-output/C2Z5BEoK/ . --recursive --exclude "*" --include "*.json" --profile bmccarthy
 ```
 
 ## TODO
-* Dockerfile should use pupeteer without "no-sandbox"
-* take image generated and add bounding boxes - http://aheckmann.github.io/gm/docs.html#drawing-primitives
+* Take image generated and add bounding boxes - http://aheckmann.github.io/gm/docs.html#drawing-primitives
 * Don't save elements which are invisible (height/width = 0)
-* find out how to represent the itemtype=Event, itemprop=name, itemprop=location, and itemprop=startDate attributes on the output from the scraper https://github.com/tomav/node-microdata-scraper/blob/master/index.js
 * create requirements.txt file for python dependencies: scikitlearn, numpy, pandas, matplotlib
-
-## Models
-* Input html element, output whether it is event or not an event
-* Input html element, output whether it is event, name, location, startDate
-* Input entire html page and solve it like a segmentation problem. instead of segmenting pixed, segment html elements 
+* Experiment with different models:
+    * Input html element, output whether it is event or not an event
+    * Input html element, output whether it is event, name, location, startDate
+    * Input entire html page and solve it like a segmentation problem. instead of segmenting pixed, segment html elements 
 
 ## Helpful links
 
@@ -107,4 +91,3 @@ aws s3 cp s3://html-feature-extractor-worker-output/C2Z5BEoK/ . --recursive --ex
 ## Citations:
 
 * [The WebDataCommons Microdata, RDFa and Microformat Dataset Series](https://www.wim.uni-mannheim.de/fileadmin/lehrstuehle/ki/pub/Meusel-etal-TheWDCMicrodataRdfaMicroformatsDataSeries-ISWC2014-rbds.pdf) by Robert Meusel, Petar Petrovski, and Christian Bizer in the Proceedings of the 13th International Semantic Web Conference: Replication, Benchmark, Data and Software Track (ISWC2014).
-

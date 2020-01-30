@@ -1,7 +1,4 @@
 const puppeteer = require('puppeteer');
-// const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-
-// puppeteer.use(StealthPlugin())
 
 /**
  * Scrape a url to return back all html elements with positional and style features
@@ -9,7 +6,7 @@ const puppeteer = require('puppeteer');
  */
 async function scrape(url) {
     const startTime = new Date();
-    const browser = await puppeteer.launch({ args: ['--disable-dev-shm-usage', '--no-sandbox'] });
+    const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: ['--disable-dev-shm-usage'] });
 
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(1000 * 2 * 60);
@@ -30,11 +27,6 @@ async function scrape(url) {
          * @param {Element} element 
          */
         function callback(element) {
-            // height, width, top_left_x, top_left_y, bottom_right_x, bottom_right_y,
-            // screenshot, text of element, html_tag, html_class_names, html_id, font_size, number_of_font_sizes, avg_font_size,
-            // max_font_size, min_font_size, foreground_color, number_of_different_colors?,
-            // how_deep_elements_nested, how_deep_this_element_is, font_weight
-
             // need to add on window scroll to get absolute position
             const boundingBox = element.getBoundingClientRect();
             const top = boundingBox.top + window.scrollY;
