@@ -23,7 +23,7 @@ http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspe
 ## Unique URLs
 The data/schema_Event.gz file contains many duplicate urls. We only want to scrape unique urls so we can run the below command to get a new text file with unique urls.
 ```shell
-python3 unique_urls.py
+python3 unique_urls.py output/unique_urls.txt
 ```
 
 ## Run html-feature-extractor-worker Locally
