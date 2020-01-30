@@ -29,27 +29,23 @@ const app = Consumer.create({
     region: process.env.AWS_REGION,
     queueUrl: process.env.SQS_QUEUE_URL,
     handleMessage: async (message) => {
-        try {
-            const { url, source } = JSON.parse(message.Body);
-            if (!url) return console.warn(`No 'url' on message: ${message.Body}`);
-            if (!source) return console.warn(`No 'source' on message: ${message.Body}`);
+        const { url, source } = JSON.parse(message.Body);
+        if (!url) return console.warn(`No 'url' on message: ${message.Body}`);
+        if (!source) return console.warn(`No 'source' on message: ${message.Body}`);
 
-            const result = await scraper.scrape(url);
+        const result = await scraper.scrape(url);
 
-            const filenameUrl = filenamifyUrl(result.data.url);
-            const suffix = shortid.generate();
+        const filenameUrl = filenamifyUrl(result.data.url);
+        const suffix = shortid.generate();
 
-            const key = `${source}/${filenameUrl}_${suffix}`;
+        const key = `${source}/${filenameUrl}_${suffix}`;
 
-            const p1 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.png`, Body: result.screenshot }).promise();
-            const p2 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.json`, Body: JSON.stringify(result.data) }).promise();
+        const p1 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.png`, Body: result.screenshot }).promise();
+        const p2 = s3.upload({ Bucket: process.env.S3_BUCKET_NAME, Key: `${key}.json`, Body: JSON.stringify(result.data) }).promise();
 
-            await Promise.all([p1, p2]);
+        await Promise.all([p1, p2]);
 
-            console.info(`finished processing: ${source}=${url}`);
-        } catch (e) {
-            console.error('caught error processing message', e);
-        }
+        console.info(`finished processing: ${source}=${url}`);
     }
 });
 

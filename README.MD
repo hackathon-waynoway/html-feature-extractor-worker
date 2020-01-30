@@ -32,7 +32,6 @@ docker build -t bmccarthy/html-feature-extractor-worker .
 
 docker run \
     --env-file .env \
-    --cap-add=SYS_ADMIN \
     bmccarthy/html-feature-extractor-worker
 ```
 
@@ -75,6 +74,7 @@ env $(cat .env | xargs) aws s3 cp s3://html-feature-extractor-worker-output/[sou
 All data analysis is done in the get_features.ipynb notebook.
 
 ## TODO
+* Do not use "--no-sandbox" when using puppeteer. Some ideas here https://github.com/Zenika/alpine-chrome#-the-best-with-seccomp
 * Take image generated and add bounding boxes - http://aheckmann.github.io/gm/docs.html#drawing-primitives
 * Don't save elements which are invisible (height/width = 0)
 * create requirements.txt file for python dependencies: scikitlearn, numpy, pandas, matplotlib

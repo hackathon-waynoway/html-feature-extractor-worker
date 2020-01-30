@@ -6,7 +6,7 @@ const puppeteer = require('puppeteer');
  */
 async function scrape(url) {
     const startTime = new Date();
-    const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: ['--disable-dev-shm-usage'] });
+    const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
 
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(1000 * 2 * 60);
