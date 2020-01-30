@@ -5,11 +5,6 @@ node-debug.log
 
 # terraform
 .terraform
-*.tfstate
-*.tfstate.backup
-
-# terraform env file
-terraform.tfvars
 
 # VS Code
 .vscode

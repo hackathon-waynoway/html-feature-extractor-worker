@@ -10,7 +10,7 @@ The following properties from events will be classified: name, startDate, locati
 1. Take the data retrieved from web data commons and place it into the "data" directory in this repository. [schema_Event.gz](http://schema.org/Event.
 http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspecific/md/schema_Event.gz)
 
-2. Create your .env file if you want to run the worker in a docker container locally (instead of in AWS)
+2. Create your .env file
     ```text
     AWS_ACCOUNT_ID=[AWS_ACCOUNT_ID]
     AWS_PROFILE=[AWS_PROFILE]
@@ -20,13 +20,6 @@ http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspe
     SQS_QUEUE_URL=[SQS_QUEUE_URL]
     S3_BUCKET_NAME=[S3_BUCKET_NAME]
     ```
-
-3. Create a file in the terraform directory called "terraform.tfvars" with the following contents if you want to run the worker in a docker container in AWS Fargate.
-    ```
-    profile = "[aws_profile]"
-    region  = "[aws_region]"
-    ```
-
 ## Unique URLs
 The data/schema_Event.gz file contains many duplicate urls. We only want to scrape unique urls so we can run the below command to get a new text file with unique urls.
 ```shell
@@ -44,12 +37,17 @@ docker run \
 ```
 
 ## Run html-feature-extractor-worker in AWS Fargate
+Terraform needs to be applied first from within the "terraform folder"
+```shell
+terraform apply -var-file=../.env
+```
+
 ```shell
 docker build -t bmccarthy/html-feature-extractor-worker .
 
-export $(cat .env | xargs) && eval $(aws ecr get-login --no-include-email)
-env $(cat .env | xargs) docker tag bmccarthy/html-feature-extractor-worker `printenv AWS_ACCOUNT_ID`.dkr.ecr.`printenv AWS_REGION`.amazonaws.com/html-feature-extractor-worker:latest
-env $(cat .env | xargs) docker push `printenv AWS_ACCOUNT_ID`.dkr.ecr.`printenv AWS_REGION`.amazonaws.com/html-feature-extractor-worker:latest
+env $(cat .env | xargs) sh -c '$(aws ecr get-login --no-include-email)'
+env $(cat .env | xargs) sh -c 'docker tag bmccarthy/html-feature-extractor-worker `printenv AWS_ACCOUNT_ID`.dkr.ecr.`printenv AWS_REGION`.amazonaws.com/html-feature-extractor-worker:latest'
+env $(cat .env | xargs) sh -c 'docker push `printenv AWS_ACCOUNT_ID`.dkr.ecr.`printenv AWS_REGION`.amazonaws.com/html-feature-extractor-worker:latest'
 ```
 
 ## Run Queue Populator

@@ -30,7 +30,7 @@ resource "aws_ecs_task_definition" "task_definition" {
     "environment": [
       {
         "name": "AWS_REGION",
-        "value": "${var.region}"
+        "value": "${var.AWS_REGION}"
       },
       {
         "name": "SQS_QUEUE_URL",
@@ -53,7 +53,7 @@ resource "aws_ecs_task_definition" "task_definition" {
         "secretOptions": null,
         "options": {
             "awslogs-group": "${aws_cloudwatch_log_group.log_group.name}",
-            "awslogs-region": "${var.region}",
+            "awslogs-region": "${var.AWS_REGION}",
             "awslogs-stream-prefix": "ecs"
         }
     },

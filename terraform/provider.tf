@@ -1,9 +1,9 @@
 provider "aws" {
-  region  = "${var.region}"
-  profile = "${var.profile}"
+  region  = "${var.AWS_REGION}"
+  profile = "${var.AWS_PROFILE}"
   version = "~> 2.27.0"
 }
 
-variable "region" {}
+variable "AWS_REGION" {}
 
-variable "profile" {}
+variable "AWS_PROFILE" {}

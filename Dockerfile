@@ -42,4 +42,4 @@ COPY --chown=pptruser:pptruser src .
 RUN mkdir -p /app/output
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD [ "node", "worker.js", "-v"]
+CMD [ "node", "worker.js"]
