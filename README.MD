@@ -23,7 +23,7 @@ http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspe
 ## Unique URLs
 The data/schema_Event.gz file contains many duplicate urls. We only want to scrape unique urls so we can run the below command to get a new text file with unique urls.
 ```shell
-python3 unique_urls.py output/unique_urls.txt
+python3 unique_urls.py data/unique_urls.txt
 ```
 
 ## Run html-feature-extractor-worker Locally
@@ -84,12 +84,10 @@ All data analysis is done in the get_features.ipynb notebook.
     * Input entire html page and solve it like a segmentation problem. instead of segmenting pixed, segment html elements 
 
 ## Helpful links
-
 * [Using AI to Automate Web Crawling](https://www.semantics3.com/blog/ai-for-automated-web-crawling/)
 * [Chargrid: Towards Understanding 2D Documents](https://arxiv.org/pdf/1809.08799.pdf)
 * [fastai-petfinder](https://github.com/EtienneT/fastai-petfinder)
 * [OpenML](https://www.openml.org)
 
-## Citations:
-
+## Citations
 * [The WebDataCommons Microdata, RDFa and Microformat Dataset Series](https://www.wim.uni-mannheim.de/fileadmin/lehrstuehle/ki/pub/Meusel-etal-TheWDCMicrodataRdfaMicroformatsDataSeries-ISWC2014-rbds.pdf) by Robert Meusel, Petar Petrovski, and Christian Bizer in the Proceedings of the 13th International Semantic Web Conference: Replication, Benchmark, Data and Software Track (ISWC2014).
