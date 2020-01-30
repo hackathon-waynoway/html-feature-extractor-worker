@@ -12,6 +12,8 @@ http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspe
 
 2. Create your .env file if you want to run the worker in a docker container locally (instead of in AWS)
     ```text
+    AWS_ACCOUNT_ID=[AWS_ACCOUNT_ID]
+    AWS_PROFILE=[AWS_PROFILE]
     AWS_ACCESS_KEY_ID=[AWS_ACCESS_KEY_ID]
     AWS_SECRET_ACCESS_KEY=[AWS_SECRET_ACCESS_KEY]
     AWS_REGION=[AWS_REGION]
@@ -22,7 +24,7 @@ http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspe
 3. Create a file in the terraform directory called "terraform.tfvars" with the following contents if you want to run the worker in a docker container in AWS Fargate.
     ```
     profile = "[aws_profile]"
-    region  = "aws_region"
+    region  = "[aws_region]"
     ```
 
 ## Unique URLs
@@ -45,9 +47,9 @@ docker run \
 ```shell
 docker build -t bmccarthy/html-feature-extractor-worker .
 
-eval $(aws ecr get-login --no-include-email --region [aws_region] --profile [aws_profile])
-docker tag bmccarthy/html-feature-extractor-worker [aws_account_id].dkr.ecr.[aws_region].amazonaws.com/html-feature-extractor-worker:latest
-docker push aws_account_id.dkr.ecr.[aws_region].amazonaws.com/html-feature-extractor-worker:latest
+export $(cat .env | xargs) && eval $(aws ecr get-login --no-include-email)
+env $(cat .env | xargs) docker tag bmccarthy/html-feature-extractor-worker `printenv AWS_ACCOUNT_ID`.dkr.ecr.`printenv AWS_REGION`.amazonaws.com/html-feature-extractor-worker:latest
+env $(cat .env | xargs) docker push `printenv AWS_ACCOUNT_ID`.dkr.ecr.`printenv AWS_REGION`.amazonaws.com/html-feature-extractor-worker:latest
 ```
 
 ## Run Queue Populator
@@ -59,18 +61,20 @@ This command will send messages to the queue the html-feature-extractor-worker i
 }
 ```
 ```shell
-export AWS_PROFILE="[aws_profile]" && \
-node src/populate-queue.js \
-    -q https://sqs.[aws_region].amazonaws.com/aws_account_id]/html-feature-extractor-worker-queue \
+env $(cat .env | xargs) node src/populate-queue.js \
+    -q https://sqs.`printenv AWS_REGION`.amazonaws.com/`printenv AWS_ACCOUNT_ID`/html-feature-extractor-worker-queue \
     -i data/unique_urls.txt \
     -c 2
 ```
 
 ## Download All JSON Files
-After the worker has finished processing, it will place all scraped websites in S3 as individual json files and corresponding screenshots.  These can be downloaded with the aws cli using the below command.
+After the worker has finished processing, it will place all scraped websites in S3 as individual json files and corresponding screenshots.  These can be downloaded with the aws cli using the below command. Be sure to replace [source_parameter] with the s3 prefix used when running the populate-queue.js script.
 ```shell
-aws s3 cp s3://html-feature-extractor-worker-output/[source_parameter]/ . --recursive --exclude "*" --include "*.json" --profile [aws_profile]
+env $(cat .env | xargs) aws s3 cp s3://html-feature-extractor-worker-output/[source_parameter]/ . --recursive --exclude "*" --include "*.json"
 ```
+
+## Analyze Data
+All data analysis is done in the get_features.ipynb notebook.
 
 ## TODO
 * Take image generated and add bounding boxes - http://aheckmann.github.io/gm/docs.html#drawing-primitives
