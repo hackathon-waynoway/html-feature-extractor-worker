@@ -20,6 +20,7 @@ http://data.dws.informatik.uni-mannheim.de/structureddata/2019-12/quads/classspe
     SQS_QUEUE_URL=[SQS_QUEUE_URL]
     S3_BUCKET_NAME=[S3_BUCKET_NAME]
     ```
+
 ## Unique URLs
 The data/schema_Event.gz file contains many duplicate urls. We only want to scrape unique urls so we can run the below command to get a new text file with unique urls.
 ```shell
