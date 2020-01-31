@@ -76,6 +76,7 @@ All data analysis is done in the get_features.ipynb notebook.
 
 ## TODO
 * Do not use "--no-sandbox" when using puppeteer. Some ideas here https://github.com/Zenika/alpine-chrome#-the-best-with-seccomp
+    - options are not supported with AWS Fargate currently
 * Take image generated and add bounding boxes - http://aheckmann.github.io/gm/docs.html#drawing-primitives
 * Don't save elements which are invisible (height/width = 0)
 * create requirements.txt file for python dependencies: scikitlearn, numpy, pandas, matplotlib
